@@ -3767,6 +3767,14 @@ object SQLConf {
       .booleanConf
       .createWithDefault(false)
 
+  val SQL_ENCRYPTED =
+    buildConf("spark.sql.encrypted")
+      .internal()
+      .doc("When set to true, will use sm4 encrypt/decrypt SQL/Log")
+      .version("3.3.1")
+      .booleanConf
+      .createWithDefault(false)
+
   /**
    * Holds information about keys that have been deprecated.
    *

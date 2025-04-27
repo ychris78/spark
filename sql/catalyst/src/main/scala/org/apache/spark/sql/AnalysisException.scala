@@ -17,10 +17,14 @@
 
 package org.apache.spark.sql
 
+import com.bestpay.bigdata.sm4.Sm4SQLUtil
+
 import org.apache.spark.{SparkThrowable, SparkThrowableHelper}
 import org.apache.spark.annotation.Stable
+import org.apache.spark.sql.catalyst.SQLConfHelper
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.trees.Origin
+import org.apache.spark.sql.internal.SQLConf._
 
 /**
  * Thrown when a query fails to analyze, usually because the query itself is invalid.
@@ -37,7 +41,8 @@ class AnalysisException protected[sql] (
     val cause: Option[Throwable] = None,
     val errorClass: Option[String] = None,
     val messageParameters: Array[String] = Array.empty)
-  extends Exception(message, cause.orNull) with SparkThrowable with Serializable {
+  extends Exception(message, cause.orNull)
+  with SQLConfHelper with SparkThrowable with Serializable {
 
   def this(errorClass: String, messageParameters: Array[String], cause: Option[Throwable]) =
     this(
@@ -77,8 +82,13 @@ class AnalysisException protected[sql] (
   }
 
   override def getMessage: String = {
-    val planAnnotation = Option(plan).flatten.map(p => s";\n$p").getOrElse("")
-    getSimpleMessage + planAnnotation
+    val planAnnotation = Option(plan).flatten.map(p => s"\n$p").getOrElse("")
+    val processedPlanAnnotation = if (conf.getConf(SQL_ENCRYPTED)) {
+      Sm4SQLUtil.encryptData(planAnnotation)
+    } else {
+      planAnnotation
+    }
+    getSimpleMessage + ";\n" + processedPlanAnnotation
   }
 
   // Outputs an exception without the logical plan.

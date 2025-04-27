@@ -17,6 +17,7 @@
 
 package org.apache.spark.sql
 
+import com.bestpay.bigdata.sm4.Sm4SQLUtil
 import java.io.Closeable
 import java.util.{ServiceLoader, UUID}
 import java.util.concurrent.TimeUnit._
@@ -46,6 +47,7 @@ import org.apache.spark.sql.execution._
 import org.apache.spark.sql.execution.command.ExternalCommandExecutor
 import org.apache.spark.sql.execution.datasources.{DataSource, LogicalRelation}
 import org.apache.spark.sql.internal._
+import org.apache.spark.sql.internal.SQLConf._
 import org.apache.spark.sql.internal.StaticSQLConf.CATALOG_IMPLEMENTATION
 import org.apache.spark.sql.sources.BaseRelation
 import org.apache.spark.sql.streaming._
@@ -617,7 +619,12 @@ class SparkSession private(
   def sql(sqlText: String): DataFrame = withActive {
     val tracker = new QueryPlanningTracker
     val plan = tracker.measurePhase(QueryPlanningTracker.PARSING) {
-      sessionState.sqlParser.parsePlan(sqlText)
+      val processedSqlText = if (conf.get(SQL_ENCRYPTED)) {
+        Sm4SQLUtil.decryptData(sqlText)
+      } else {
+        sqlText
+      }
+      sessionState.sqlParser.parsePlan(processedSqlText)
     }
     Dataset.ofRows(self, plan, tracker)
   }

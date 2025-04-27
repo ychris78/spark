@@ -16,6 +16,7 @@
  */
 package org.apache.spark.sql.catalyst.parser
 
+import com.bestpay.bigdata.sm4.Sm4SQLUtil
 import org.antlr.v4.runtime._
 import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.misc.{Interval, ParseCancellationException}
@@ -30,6 +31,7 @@ import org.apache.spark.sql.catalyst.parser.ParserUtils.withOrigin
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.trees.Origin
 import org.apache.spark.sql.errors.QueryParsingErrors
+import org.apache.spark.sql.internal.SQLConf._
 import org.apache.spark.sql.types.{DataType, StructType}
 
 /**
@@ -245,7 +247,7 @@ class ParseException(
     None,
     None,
     errorClass,
-    messageParameters) {
+    messageParameters) with SQLConfHelper {
 
   def this(message: String, ctx: ParserRuleContext) = {
     this(Option(ParserUtils.command(ctx)),
@@ -279,7 +281,6 @@ class ParseException(
 
   override def getMessage: String = {
     val builder = new StringBuilder
-    builder ++= "\n" ++= message
     start match {
       case Origin(Some(l), Some(p), _, _, _, _, _) =>
         builder ++= s"(line $l, pos $p)\n"
@@ -295,7 +296,12 @@ class ParseException(
           builder ++= "\n== SQL ==\n" ++= cmd
         }
     }
-    builder.toString
+    val cmd = if (conf.getConf(SQL_ENCRYPTED)) {
+      Sm4SQLUtil.encryptData(builder.toString)
+    } else {
+      builder.toString
+    }
+    "\n" + message + "\n" + cmd
   }
 
   def withCommand(cmd: String): ParseException = {
