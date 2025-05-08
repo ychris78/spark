@@ -131,6 +131,7 @@ class ExecutionPage(parent: SQLTab) extends WebUIPage("execution") with Logging 
         {metadata}
       </div>
       {planVisualizationResources(request)}
+      <script>$(function() {{ if (shouldRenderPlanViz()) {{ renderPlanViz(); }} }})</script>
     </div>
   }
 
@@ -139,7 +140,7 @@ class ExecutionPage(parent: SQLTab) extends WebUIPage("execution") with Logging 
 
   private def physicalPlanDescription(physicalPlanDescription: String): Seq[Node] = {
     <div>
-      <span style="cursor: pointer;">
+      <span style="cursor: pointer;" onclick="clickPhysicalPlanDetails();">
         <span id="physical-plan-details-arrow" class="arrow-closed"></span>
         <a>Details</a>
       </span>
@@ -148,7 +149,7 @@ class ExecutionPage(parent: SQLTab) extends WebUIPage("execution") with Logging 
       <pre>{physicalPlanDescription}</pre>
     </div>
     <script>
-      function ppd() {{
+      function clickPhysicalPlanDetails() {{
         $('#physical-plan-details').toggle();
         $('#physical-plan-details-arrow').toggleClass('arrow-open').toggleClass('arrow-closed');
       }}

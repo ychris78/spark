@@ -282,8 +282,7 @@ private[spark] object UIUtils extends Logging {
     val appName = activeTab.appName
     val shortAppName = if (appName.length < 36) appName else appName.take(32) + "..."
     val header = activeTab.headerTabs.map { tab =>
-      <li class={if (tab == activeTab) "nav-item active" else "nav-item"}
-          style={if (tab.name == "SQL / DataFrame") "display: none" else ""}>
+      <li class={if (tab == activeTab) "nav-item active" else "nav-item"}>
         <a class="nav-link"
            href={prependBaseUri(request, activeTab.basePath, "/" + tab.prefix + "/")}>{tab.name}</a>
       </li>
